@@ -3,18 +3,26 @@
 namespace ADS\TakeHome;
 
 include __DIR__ . "/../vendor/autoload.php";
+require_once __DIR__ . "/helpers.php";
 
 use ADS\TakeHome\Controllers\ExampleController;
+use ADS\TakeHome\Controllers\WeatherController;
 use ADS\TakeHome\Framework\MySQL;
 use ADS\TakeHome\Framework\Router;
+use ADS\TakeHome\Framework\Config;
+use ADS\TakeHome\Repositories\WeatherRepository;
 
 $router = new Router();
-
-$mysql = new MySQL("db", "weather", "root", "root");
+$dbConfig = Config::load(__DIR__ . "/../config")->get('database.mysql');
+$mysql = new MySQL(...$dbConfig);
 $helloController = new ExampleController(greeting: "Hello", db: $mysql);
+$weatherController = new WeatherController(new WeatherRepository($mysql));
 
 $router->addRoute("GET", "/hello", $helloController->sayHello(...));
 $router->addRoute("GET", "/budapest", $helloController->getBudapestMaxTempCount(...));
+
 // TODO: többi végpont
+$router->addRoute("GET", "/city-weather", $weatherController->getCityWeather(...));
+$router->addRoute("GET", "/region-weather", $weatherController->getRegionWeather(...));
 
 $router->handleRequest();

@@ -6,6 +6,7 @@ namespace ADS\TakeHome\Framework;
 
 use Closure;
 use Exception;
+use ADS\TakeHome\RequestValidation\RequestValidationException;
 
 /**
  * Egyszerű HTTP router.
@@ -61,6 +62,8 @@ class Router
         $request = HttpRequest::fromGlobals();
         try {
             $res = $handler($request);
+        } catch (RequestValidationException $e) {
+            $res = new JsonHttpResponse(['errors' => $e->errors], 400);
         } catch (Exception $e) {
             $stack = $e->getTraceAsString();
             $res = new JsonHttpResponse([

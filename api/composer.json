@@ -6,6 +6,9 @@
         "format": "php-cs-fixer fix"
     },
     "autoload": {
+        "files": [
+            "src/helpers.php"
+        ],
         "psr-4": {
             "ADS\\TakeHome\\": "src/"
         },
