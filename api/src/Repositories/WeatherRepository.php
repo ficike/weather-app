@@ -8,7 +8,7 @@ use ADS\TakeHome\Framework\MySQL;
 use ADS\TakeHome\DTO\WeatherData;
 use DateTimeInterface;
 
-readonly class WeatherRepository
+class WeatherRepository
 {
     public function __construct(private MySQL $db) {}
 
