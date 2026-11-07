@@ -22,28 +22,14 @@ class WeatherData implements JsonSerializable
         $this->precipitation = $data['precipitation'] === null ? null : (float) $data['precipitation'];
     }
 
-    /** @return array{date: string, min_temp: string|null, max_temp: string|null, precipitation: string|null} */
+    /** @return array{date: string, min_temp: float|null, max_temp: float|null, precipitation: float|null} */
     public function jsonSerialize(): array
     {
         return [
             'date' => $this->date->format(config('date.output_format')),
-            'min_temp' => $this->formatUnit($this->minTemp, config('weather.temperature.unit')),
-            'max_temp' => $this->formatUnit($this->maxTemp, config('weather.temperature.unit')),
-            'precipitation' => $this->formatUnit($this->precipitation, config('weather.precipitation.unit')),
+            'min_temp' => $this->minTemp,
+            'max_temp' => $this->maxTemp,
+            'precipitation' => $this->precipitation,
         ];
-    }
-
-    private function formatUnit(?float $value, string $unit): ?string
-    {
-        if ($value === null) {
-            return null;
-        }
-
-        return number_format(
-            $value,
-            config('weather.temperature.decimals'),
-            config('weather.temperature.decimal_separator'),
-            config('weather.temperature.thousands_separator'),
-        ) . $unit;
     }
 }

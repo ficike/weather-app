@@ -1,25 +1,30 @@
 import { useEffect, useState } from "react";
 import { Pagination } from "./Pagination.tsx";
+import { UnitSystemToggle } from "./UnitSystemToggle.tsx";
+import { formatWeatherValue, type UnitSystem, type WeatherUnitConfig } from "../utils/weatherUnits.ts";
 
 export type WeatherRow = {
   date: string;
-  min_temp: string | null;
-  max_temp: string | null;
-  precipitation: string | null;
+  min_temp: number | null;
+  max_temp: number | null;
+  precipitation: number | null;
 };
 
-export type WeatherStatistics = Record<"min_temp" | "max_temp" | "precipitation", {
-  median: string | null;
-  mode: string[];
-}>;
+export type WeatherStatistics = Partial<Record<"min_temp" | "max_temp" | "precipitation", {
+  median: number | null;
+  mode: number[];
+}>>;
 
 type WeatherTableProps = {
   header: Record<string, string>;
   rows: WeatherRow[];
   statistics: WeatherStatistics;
+  unitSystem: UnitSystem;
+  onUnitSystemChange: (unitSystem: UnitSystem) => void;
+  unitConfig: WeatherUnitConfig;
 };
 
-export function WeatherTable({ header, rows, statistics }: WeatherTableProps) {
+export function WeatherTable({ header, rows, statistics, unitSystem, onUnitSystemChange, unitConfig }: WeatherTableProps) {
   const rowsPerPage = 10;
   const [page, setPage] = useState(1);
   const pageCount = Math.max(1, Math.ceil(rows.length / rowsPerPage));
@@ -31,12 +36,13 @@ export function WeatherTable({ header, rows, statistics }: WeatherTableProps) {
 
   return (
     <div className="mt-6">
+      <UnitSystemToggle value={unitSystem} unitConfig={unitConfig} onChange={onUnitSystemChange} />
       <div className="overflow-x-auto rounded-lg border-2 border-solid border-amber-500 p-4">
         <table className="w-full border-collapse text-left">
         <thead>
           <tr className="border-b-2 border-amber-500">
             {Object.entries(header).map(([key, label]) => (
-              <th key={key} scope="col" className="p-3">{label}</th>
+              <th key={key} scope="col" className="p-2">{label}</th>
             ))}
           </tr>
         </thead>
@@ -44,7 +50,13 @@ export function WeatherTable({ header, rows, statistics }: WeatherTableProps) {
           {rows.length > 0 ? visibleRows.map((row) => (
             <tr key={row.date} className="border-b border-gray-200 last:border-b-0">
               {Object.keys(header).map((key) => (
-                <td key={key} className="p-3">{row[key as keyof WeatherRow] ?? "–"}</td>
+                <td key={key} className="p-3">
+                  {key === "date"
+                    ? row.date
+                    : row[key as keyof WeatherRow] === null
+                      ? "–"
+                      : formatWeatherValue(key, row[key as "min_temp" | "max_temp" | "precipitation"] as number, unitSystem, unitConfig)}
+                </td>
               ))}
             </tr>
           )) : (
@@ -56,16 +68,22 @@ export function WeatherTable({ header, rows, statistics }: WeatherTableProps) {
           )}
         </tbody>
         <tfoot className="border-t-2 border-amber-500">
-          <tr>
-            <th scope="row" className="p-3">Medián</th>
-            <td className="p-3">{statistics.min_temp.median ?? "–"}</td>
-            <td className="p-3">{statistics.max_temp.median ?? "–"}</td>
-          </tr>
-          <tr>
-            <th scope="row" className="p-3">Módusz</th>
-            <td className="p-3">{statistics.min_temp.mode.join(", ") || "–"}</td>
-            <td className="p-3">{statistics.max_temp.mode.join(", ") || "–"}</td>
-          </tr>
+          {(["Medián", "Módusz"] as const).map((statistic) => (
+            <tr key={statistic}>
+              <th scope="row" className="p-3">{statistic}</th>
+              {Object.keys(header).filter((key) => key !== "date").map((key) => {
+                const values = statistics[key as keyof WeatherStatistics];
+                const formatted = !values
+                  ? "–"
+                  : statistic === "Medián"
+                    ? values.median === null ? "–" : formatWeatherValue(key, values.median, unitSystem, unitConfig)
+                    : values.mode.length === 0
+                    ? "–"
+                    : values.mode.map((value) => formatWeatherValue(key, value, unitSystem, unitConfig)).join(", ");
+                return <td key={key} className="p-3">{formatted}</td>;
+              })}
+            </tr>
+          ))}
         </tfoot>
         </table>
       </div>

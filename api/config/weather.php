@@ -3,13 +3,17 @@
 declare(strict_types=1);
 
 return [
-    'temperature' => [
-        'decimals' => 1,
-        'decimal_separator' => '.',
-        'thousands_separator' => '',
-        'unit' => '°C',
-    ],
-    'precipitation' => [
-        'unit' => 'mm',
+    'decimal_places' => 1,
+    'units' => [
+        'si' => [
+            'label' => 'SI',
+            'temperature' => '°C',
+            'precipitation' => 'mm',
+        ],
+        'imperial' => [
+            'label' => 'Angolszász',
+            'temperature' => '°F',
+            'precipitation' => 'in',
+        ],
     ],
 ];

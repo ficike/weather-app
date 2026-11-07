@@ -10,14 +10,7 @@ use DateTimeInterface;
 
 readonly class WeatherRepository
 {
-    private array $statColumns;
-
-    public function __construct(private MySQL $db) {
-        $this->statColumns = [
-            'min_temp' => config('weather.temperature.unit'),
-            'max_temp' => config('weather.temperature.unit')
-        ];
-    }
+    public function __construct(private MySQL $db) {}
 
     /** @return array<int, string> City IDs mapped to city names. */
     public function findCities(): array
@@ -49,7 +42,7 @@ readonly class WeatherRepository
      * @return array{
      *   header: array<string, string>,
      *   data: list<WeatherData>,
-     *   statistics: array<string, array{median: string|null, mode: list<string>}>
+     *   statistics: array<string, array{median: float|null, mode: list<float>}>
      * }
      */
     public function findByCityAndDateRange(
@@ -83,7 +76,7 @@ readonly class WeatherRepository
                 'precipitation' => 'Csapadék',
             ],
             'data' => $this->formatWeatherData($rows),
-            'statistics' => $this->summarizeWeatherData($rows, $this->statColumns),
+            'statistics' => $this->summarizeWeatherData($rows),
         ];
     }
 
@@ -94,7 +87,7 @@ readonly class WeatherRepository
      * @return array{
      *   header: array<string, string>,
      *   data: list<WeatherData>,
-     *   statistics: array<string, array{median: string|null, mode: list<string>}>
+     *   statistics: array<string, array{median: float|null, mode: list<float>}>
      * }
      */
     public function findByRegionAndDateRange(
@@ -132,13 +125,13 @@ readonly class WeatherRepository
                 'precipitation' => 'Átlag csapadék',
             ],
             'data' => $this->formatWeatherData($rows),
-            'statistics' => $this->summarizeWeatherData($rows, $this->statColumns),
+            'statistics' => $this->summarizeWeatherData($rows),
         ];
     }
 
     /**
-     * @param array $rows
-     * @return array
+     * @param list<array<string, int|float|string|null>> $rows
+     * @return list<WeatherData>
      */
     public function formatWeatherData(array $rows): array
     {
@@ -151,12 +144,12 @@ readonly class WeatherRepository
 
     /**
      * @param list<array<string, int|float|string|null>> $rows
-     * @return array<string, array{median: string|null, mode: list<string>}>
+     * @return array<string, array{median: float|null, mode: list<float>}>
      */
-    private function summarizeWeatherData(array $rows, array $columns): array
+    private function summarizeWeatherData(array $rows): array
     {
         $summary = [];
-        foreach ($columns as $column => $unit) {
+        foreach (['min_temp', 'max_temp'] as $column) {
             $values = array_values(array_filter(
                 array_map(static fn (array $row): ?float => $row[$column] === null ? null : (float)$row[$column], $rows),
                 static fn (?float $value): bool => $value !== null,
@@ -180,13 +173,13 @@ readonly class WeatherRepository
             if ($maxFrequency > 1) {
                 foreach ($frequencies as $value => $frequency) {
                     if ($frequency === $maxFrequency) {
-                        $modes[] = $this->formatUnit((float)$value, $unit);
+                        $modes[] = (float)$value;
                     }
                 }
             }
 
             $summary[$column] = [
-                'median' => $this->formatUnit($median, $unit),
+                'median' => $median,
                 'mode' => $modes,
             ];
         }
@@ -194,13 +187,4 @@ readonly class WeatherRepository
         return $summary;
     }
 
-    private function formatUnit(float $value, string $unit): string
-    {
-        return number_format(
-            $value,
-            config('weather.temperature.decimals'),
-            config('weather.temperature.decimal_separator'),
-            config('weather.temperature.thousands_separator'),
-        ) . $unit;
-    }
 }

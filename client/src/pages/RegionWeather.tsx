@@ -3,6 +3,7 @@ import { DateField } from "../components/forms/DateField.tsx";
 import { SearchButton } from "../components/forms/SearchButton.tsx";
 import { Select } from "../components/forms/Select.tsx";
 import { WeatherTable, type WeatherRow, type WeatherStatistics } from "../components/WeatherTable.tsx";
+import type { UnitSystem, WeatherUnitConfig } from "../utils/weatherUnits.ts";
 
 type RegionWeatherResponse = {
   header: Record<string, string>;
@@ -14,9 +15,12 @@ type RegionWeatherProps = {
   regions: Record<string, string>;
   optionsLoading: boolean;
   optionsError: string | null;
+  unitSystem: UnitSystem;
+  onUnitSystemChange: (unitSystem: UnitSystem) => void;
+  unitConfig: WeatherUnitConfig | null;
 };
 
-export function RegionWeather({ regions, optionsLoading, optionsError }: RegionWeatherProps) {
+export function RegionWeather({ regions, optionsLoading, optionsError, unitSystem, onUnitSystemChange, unitConfig }: RegionWeatherProps) {
   const [region, setRegion] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -74,7 +78,16 @@ export function RegionWeather({ regions, optionsLoading, optionsError }: RegionW
         </div>
         {(optionsError || error) && <div role="alert" className="mt-2 text-sm text-red-500">{optionsError ?? error}</div>}
       </div>
-      {result !== null && <WeatherTable header={result.header} rows={result.data} statistics={result.statistics} />}
+      {result !== null && unitConfig !== null && (
+        <WeatherTable
+          header={result.header}
+          rows={result.data}
+          statistics={result.statistics}
+          unitSystem={unitSystem}
+          onUnitSystemChange={onUnitSystemChange}
+          unitConfig={unitConfig}
+        />
+      )}
     </div>
   );
 }

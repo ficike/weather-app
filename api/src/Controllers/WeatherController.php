@@ -17,6 +17,14 @@ class WeatherController extends Controller
     {
     }
 
+    public function getWeatherConfig(HttpRequest $request): HttpResponseInterface
+    {
+        return new JsonHttpResponse([
+            'units' => config('weather.units'),
+            'decimals' => config('weather.decimal_places'),
+        ]);
+    }
+
     public function getCities(HttpRequest $request): HttpResponseInterface
     {
         return new JsonHttpResponse($this->weatherRepository->findCities());
