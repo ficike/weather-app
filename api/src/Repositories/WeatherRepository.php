@@ -10,9 +10,48 @@ use DateTimeInterface;
 
 readonly class WeatherRepository
 {
-    public function __construct(private MySQL $db) {}
+    private array $statColumns;
 
-    /** @return list<WeatherData> */
+    public function __construct(private MySQL $db) {
+        $this->statColumns = [
+            'min_temp' => config('weather.temperature.unit'),
+            'max_temp' => config('weather.temperature.unit')
+        ];
+    }
+
+    /** @return array<int, string> City IDs mapped to city names. */
+    public function findCities(): array
+    {
+        $rows = $this->db->queryAssoc(
+            "SELECT id, CONCAT(name, ' (', region, ')') AS name FROM cities ORDER BY name"
+        );
+
+        $cities = [];
+        foreach ($rows as $row) {
+            $cities[$row['id']] = $row['name'];
+        }
+        return $cities;
+    }
+
+    /** @return array<string, string> Region names mapped to themselves. */
+    public function findRegions(): array
+    {
+        $rows = $this->db->queryAssoc('SELECT DISTINCT region FROM cities ORDER BY region');
+
+        $regions = [];
+        foreach ($rows as $row) {
+            $regions[$row['region']] = $row['region'];
+        }
+        return $regions;
+    }
+
+    /**
+     * @return array{
+     *   header: array<string, string>,
+     *   data: list<WeatherData>,
+     *   statistics: array<string, array{median: string|null, mode: list<string>}>
+     * }
+     */
     public function findByCityAndDateRange(
         int $cityId,
         DateTimeInterface $startDate,
@@ -36,14 +75,27 @@ readonly class WeatherRepository
             ],
         );
 
-        return $this->formatWeatherData($rows);
+        return [
+            'header' => [
+                'date' => 'Dátum',
+                'min_temp' => 'Minimum hőmérséklet',
+                'max_temp' => 'Maximum hőmérséklet',
+                'precipitation' => 'Csapadék',
+            ],
+            'data' => $this->formatWeatherData($rows),
+            'statistics' => $this->summarizeWeatherData($rows, $this->statColumns),
+        ];
     }
 
     /**
      * @param string $region
      * @param DateTimeInterface $startDate
      * @param DateTimeInterface $endDate
-     * @return list<WeatherData>
+     * @return array{
+     *   header: array<string, string>,
+     *   data: list<WeatherData>,
+     *   statistics: array<string, array{median: string|null, mode: list<string>}>
+     * }
      */
     public function findByRegionAndDateRange(
         string $region,
@@ -72,7 +124,16 @@ readonly class WeatherRepository
             ],
         );
 
-        return $this->formatWeatherData($rows);
+        return [
+            'header' => [
+                'date' => 'Dátum',
+                'min_temp' => 'Átlag minimum hőmérséklet',
+                'max_temp' => 'Átlag maximum hőmérséklet',
+                'precipitation' => 'Átlag csapadék',
+            ],
+            'data' => $this->formatWeatherData($rows),
+            'statistics' => $this->summarizeWeatherData($rows, $this->statColumns),
+        ];
     }
 
     /**
@@ -86,5 +147,60 @@ readonly class WeatherRepository
             $weather[] = new WeatherData($row);
         }
         return $weather;
+    }
+
+    /**
+     * @param list<array<string, int|float|string|null>> $rows
+     * @return array<string, array{median: string|null, mode: list<string>}>
+     */
+    private function summarizeWeatherData(array $rows, array $columns): array
+    {
+        $summary = [];
+        foreach ($columns as $column => $unit) {
+            $values = array_values(array_filter(
+                array_map(static fn (array $row): ?float => $row[$column] === null ? null : (float)$row[$column], $rows),
+                static fn (?float $value): bool => $value !== null,
+            ));
+            sort($values, SORT_NUMERIC);
+
+            if ($values === []) {
+                $summary[$column] = ['median' => null, 'mode' => []];
+                continue;
+            }
+
+            $count = count($values);
+            $middle = intdiv($count, 2);
+            $median = $count % 2 === 1
+                ? $values[$middle]
+                : ($values[$middle - 1] + $values[$middle]) / 2;
+
+            $frequencies = array_count_values(array_map(static fn (float $value): string => (string)$value, $values));
+            $maxFrequency = max($frequencies);
+            $modes = [];
+            if ($maxFrequency > 1) {
+                foreach ($frequencies as $value => $frequency) {
+                    if ($frequency === $maxFrequency) {
+                        $modes[] = $this->formatUnit((float)$value, $unit);
+                    }
+                }
+            }
+
+            $summary[$column] = [
+                'median' => $this->formatUnit($median, $unit),
+                'mode' => $modes,
+            ];
+        }
+
+        return $summary;
+    }
+
+    private function formatUnit(float $value, string $unit): string
+    {
+        return number_format(
+            $value,
+            config('weather.temperature.decimals'),
+            config('weather.temperature.decimal_separator'),
+            config('weather.temperature.thousands_separator'),
+        ) . $unit;
     }
 }

@@ -17,6 +17,16 @@ class WeatherController extends Controller
     {
     }
 
+    public function getCities(HttpRequest $request): HttpResponseInterface
+    {
+        return new JsonHttpResponse($this->weatherRepository->findCities());
+    }
+
+    public function getRegions(HttpRequest $request): HttpResponseInterface
+    {
+        return new JsonHttpResponse($this->weatherRepository->findRegions());
+    }
+
     public function getCityWeather(HttpRequest $request): HttpResponseInterface
     {
         $validated = $this->validateRequest($request, new CityWeatherRequestValidator());
