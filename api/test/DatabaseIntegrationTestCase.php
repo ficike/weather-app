@@ -16,11 +16,11 @@ abstract class DatabaseIntegrationTestCase extends TestCase
 
     protected function setUp(): void
     {
-        $host = 'db';
-        $schema = 'weather_test';
-        $username = 'root';
-        $password = 'root';
-        $port = 3306;
+        $host = config('database.mysql.host');
+        $schema = config('database.mysql.schema') . '_test';
+        $username = config('database.mysql.username');
+        $password = config('database.mysql.password');
+        $port = config('database.mysql.port');
 
         if (preg_match('/^weather_test[a-zA-Z0-9_]*$/', $schema) !== 1) {
             throw new RuntimeException('Az integrációs tesztek csak weather_test kezdetű adatbázissémát használhatnak.');
