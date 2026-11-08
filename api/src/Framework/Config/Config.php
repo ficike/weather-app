@@ -12,7 +12,9 @@ final class Config
     private static ?self $instance = null;
 
     /** @param array<string, mixed> $items */
-    private function __construct(private readonly array $items) {}
+    private function __construct(private readonly array $items)
+    {
+    }
 
     public static function load(string $directory): self
     {

@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace ADS\TakeHome\Controllers;
 
-use ADS\TakeHome\RequestValidation\RegionWeatherRequestValidator;
 use ADS\TakeHome\Framework\Http\HttpRequest;
 use ADS\TakeHome\Framework\Http\HttpResponseInterface;
 use ADS\TakeHome\Framework\Http\JsonHttpResponse;
 use ADS\TakeHome\RequestValidation\CityWeatherRequestValidator;
+use ADS\TakeHome\RequestValidation\RegionWeatherRequestValidator;
 use ADS\TakeHome\Services\Weather\WeatherService;
 use ADS\TakeHome\Services\Weather\WeatherSettings;
 
@@ -17,8 +17,7 @@ class WeatherController extends Controller
     public function __construct(
         private readonly WeatherService $weatherService,
         private readonly WeatherSettings $weatherSettings,
-    )
-    {
+    ) {
     }
 
     public function getWeatherConfig(HttpRequest $request): HttpResponseInterface

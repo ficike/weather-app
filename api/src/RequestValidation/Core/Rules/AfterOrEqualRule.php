@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace ADS\TakeHome\RequestValidation\Core\Rules;
 
 use ADS\TakeHome\RequestValidation\Core\ValidationRuleInterface;
+
 final class AfterOrEqualRule implements ValidationRuleInterface
 {
     public function validate(mixed $value, ?string $argument, array $data): ?string

@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace ADS\TakeHome\Controllers;
 
-use DateTimeImmutable;
 use ADS\TakeHome\Framework\Http\HttpRequest;
 use ADS\TakeHome\RequestValidation\Core\RequestValidationException;
 use ADS\TakeHome\RequestValidation\Core\RequestValidator;
+use DateTimeImmutable;
 
 /** Base controller shared by application controllers. */
 abstract class Controller

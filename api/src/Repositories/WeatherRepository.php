@@ -9,7 +9,9 @@ use DateTimeInterface;
 
 class WeatherRepository implements WeatherRepositoryInterface
 {
-    public function __construct(private DatabaseConnectionInterface $db) {}
+    public function __construct(private DatabaseConnectionInterface $db)
+    {
+    }
 
     /** @return array<int, string> City IDs mapped to city names. */
     public function findCities(): array
@@ -44,8 +46,7 @@ class WeatherRepository implements WeatherRepositoryInterface
         int $cityId,
         DateTimeInterface $startDate,
         DateTimeInterface $endDate,
-    ): array
-    {
+    ): array {
         $rows = $this->db->queryAssoc(
             'SELECT mx.date, mn.min_temp, mx.max_temp, p.precipitation
              FROM maximum_temperatures AS mx
@@ -76,8 +77,7 @@ class WeatherRepository implements WeatherRepositoryInterface
         string $region,
         DateTimeInterface $startDate,
         DateTimeInterface $endDate,
-    ): array
-    {
+    ): array {
         $rows = $this->db->queryAssoc(
             'SELECT mx.date,
                  AVG(mn.min_temp) AS min_temp,

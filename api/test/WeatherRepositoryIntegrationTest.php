@@ -6,8 +6,8 @@ namespace ADS\TakeHome\Tests;
 
 use ADS\TakeHome\Repositories\WeatherRepository;
 use ADS\TakeHome\Services\Weather\WeatherReportFactory;
-use ADS\TakeHome\Services\Weather\WeatherStatisticsCalculator;
 use ADS\TakeHome\Services\Weather\WeatherService;
+use ADS\TakeHome\Services\Weather\WeatherStatisticsCalculator;
 use DateTimeImmutable;
 use PHPUnit\Framework\Attributes\Test;
 

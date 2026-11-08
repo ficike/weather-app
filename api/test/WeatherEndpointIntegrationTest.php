@@ -10,9 +10,9 @@ use ADS\TakeHome\Framework\Http\HttpResponseEmitter;
 use ADS\TakeHome\Framework\Http\Router;
 use ADS\TakeHome\Repositories\WeatherRepository;
 use ADS\TakeHome\Services\Weather\WeatherReportFactory;
-use ADS\TakeHome\Services\Weather\WeatherStatisticsCalculator;
 use ADS\TakeHome\Services\Weather\WeatherService;
 use ADS\TakeHome\Services\Weather\WeatherSettings;
+use ADS\TakeHome\Services\Weather\WeatherStatisticsCalculator;
 use PHPUnit\Framework\Attributes\Test;
 
 class WeatherEndpointIntegrationTest extends DatabaseIntegrationTestCase
