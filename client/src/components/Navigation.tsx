@@ -1,24 +1,20 @@
+import { appRoutes, type AppPath } from "../routing/routes.ts";
+
 type NavigationProps = {
   currentPath: string;
-  onNavigate: (path: string) => void;
+  onNavigate: (path: AppPath) => void;
 };
-
-const links = [
-  { path: "/city-weather", label: "Város időjárása" },
-  { path: "/region-weather", label: "Régió időjárása" },
-];
 
 export function Navigation({ currentPath, onNavigate }: NavigationProps) {
   return (
     <nav aria-label="Felületválasztó" className="px-3 py-3">
       <ul className="flex max-w-4xl gap-3">
-        {links.map(({ path, label }) => (
+        {appRoutes.map(({ path, label }) => (
           <li key={path}>
             <a
               href={path}
               aria-current={currentPath === path ? "page" : undefined}
               onClick={(event) => {
-                if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
                 event.preventDefault();
                 onNavigate(path);
               }}

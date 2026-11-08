@@ -1,27 +1,31 @@
-import type { UnitSystem, WeatherUnitConfig } from "../utils/weatherUnits.ts";
+import { useUnitSystem } from "../contexts/UnitSystemContext.tsx";
+import { unitSystems, type WeatherUnitConfig } from "../utils/weatherUnits.ts";
 
 type UnitSystemToggleProps = {
-  value: UnitSystem;
   unitConfig: WeatherUnitConfig;
-  onChange: (unitSystem: UnitSystem) => void;
 };
 
-export function UnitSystemToggle({ value, unitConfig, onChange }: UnitSystemToggleProps) {
+export function UnitSystemToggle({ unitConfig }: UnitSystemToggleProps) {
+  const { unitSystem, setUnitSystem } = useUnitSystem();
+
   return (
     <fieldset className="mb-4 flex justify-end gap-4">
       <legend className="sr-only">Mértékegység-rendszer</legend>
-      {Object.entries(unitConfig.units).map(([system, units]) => (
-        <label key={system} className="flex items-center gap-2">
-          <input
-            type="radio"
-            name="unit-system"
-            value={system}
-            checked={value === system}
-            onChange={() => onChange(system as UnitSystem)}
-          />
-          {units.label} ({units.temperature}, {units.precipitation})
-        </label>
-      ))}
+      {unitSystems.map((system) => {
+        const units = unitConfig.units[system];
+        return (
+          <label key={system} className="flex items-center gap-2">
+            <input
+              type="radio"
+              name="unit-system"
+              value={system}
+              checked={unitSystem === system}
+              onChange={() => setUnitSystem(system)}
+            />
+            {units.label} ({units.temperature}, {units.precipitation})
+          </label>
+        );
+      })}
     </fieldset>
   );
 }

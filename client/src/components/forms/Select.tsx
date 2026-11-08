@@ -14,7 +14,7 @@ export function Select({
   options,
   value,
   loading = false,
-  loadingMessage = "Betöltés…",
+  loadingMessage = "Elemek betöltése…",
   onChange,
 }: SelectProps) {
   return (

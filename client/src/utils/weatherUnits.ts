@@ -1,9 +1,16 @@
-export type WeatherUnitConfig = {
-  units: Record<string, { label: string; temperature: string; precipitation: string }>;
-  decimals: number;
+export const unitSystems = ["si", "imperial"] as const;
+export type UnitSystem = (typeof unitSystems)[number];
+
+type UnitDefinition = {
+  label: string;
+  temperature: string;
+  precipitation: string;
 };
 
-export type UnitSystem = keyof WeatherUnitConfig["units"];
+export type WeatherUnitConfig = {
+  units: Record<UnitSystem, UnitDefinition>;
+  decimals: number;
+};
 
 export function convertWeatherValue(key: string, value: number, unitSystem: UnitSystem): number {
   if (unitSystem === "imperial") {
