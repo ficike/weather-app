@@ -46,6 +46,7 @@ class WeatherData implements JsonSerializable
         ];
     }
 
+    /** @param array<string, int|float|string|null> $row */
     private static function requiredField(array $row, string $field): mixed
     {
         if (!array_key_exists($field, $row)) {

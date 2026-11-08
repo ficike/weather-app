@@ -6,6 +6,7 @@ namespace ADS\TakeHome\Tests;
 
 use ADS\TakeHome\Controllers\WeatherController;
 use ADS\TakeHome\Framework\Http\HttpRequest;
+use ADS\TakeHome\Framework\Http\HttpResponseInterface;
 use ADS\TakeHome\Framework\Http\JsonHttpResponse;
 use ADS\TakeHome\RequestValidation\Core\RequestValidationException;
 use ADS\TakeHome\Services\Weather\WeatherService;
@@ -28,7 +29,7 @@ class WeatherControllerTest extends TestCase
         self::assertSame([
             'units' => ['si' => ['label' => 'SI', 'temperature' => '°C', 'precipitation' => 'mm']],
             'decimals' => 1,
-        ], json_decode($response->getBody(), true));
+        ], $this->decodeResponse($response));
     }
 
     #[Test]
@@ -41,7 +42,7 @@ class WeatherControllerTest extends TestCase
         $response = $controller->getCities(new HttpRequest([]));
 
         self::assertSame(200, $response->getStatus());
-        self::assertSame(['1' => 'Budapest (Közép-Magyarország)'], json_decode($response->getBody(), true));
+        self::assertSame(['1' => 'Budapest (Közép-Magyarország)'], $this->decodeResponse($response));
     }
 
     #[Test]
@@ -54,7 +55,7 @@ class WeatherControllerTest extends TestCase
         $response = $controller->getRegions(new HttpRequest([]));
 
         self::assertSame(200, $response->getStatus());
-        self::assertSame(['Közép-Magyarország' => 'Közép-Magyarország'], json_decode($response->getBody(), true));
+        self::assertSame(['Közép-Magyarország' => 'Közép-Magyarország'], $this->decodeResponse($response));
     }
 
     #[Test]
@@ -73,7 +74,7 @@ class WeatherControllerTest extends TestCase
         ]));
 
         self::assertSame(200, $response->getStatus());
-        self::assertSame($weather, json_decode($response->getBody(), true));
+        self::assertSame($weather, $this->decodeResponse($response));
     }
 
     #[Test]
@@ -108,7 +109,7 @@ class WeatherControllerTest extends TestCase
         ]));
 
         self::assertSame(200, $response->getStatus());
-        self::assertSame($weather, json_decode($response->getBody(), true));
+        self::assertSame($weather, $this->decodeResponse($response));
     }
 
     #[Test]
@@ -132,5 +133,13 @@ class WeatherControllerTest extends TestCase
             ['si' => ['label' => 'SI', 'temperature' => '°C', 'precipitation' => 'mm']],
             1,
         ));
+    }
+
+    private function decodeResponse(HttpResponseInterface $response): mixed
+    {
+        $body = $response->getBody();
+        self::assertIsString($body);
+
+        return json_decode($body, true);
     }
 }

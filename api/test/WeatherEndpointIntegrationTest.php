@@ -23,7 +23,8 @@ class WeatherEndpointIntegrationTest extends DatabaseIntegrationTestCase
     {
         parent::setUp();
         $this->seedWeatherData();
-        $this->previousStatus = http_response_code();
+        $status = http_response_code();
+        $this->previousStatus = is_int($status) ? $status : false;
     }
 
     protected function tearDown(): void
@@ -84,7 +85,10 @@ class WeatherEndpointIntegrationTest extends DatabaseIntegrationTestCase
         self::assertArrayHasKey('region', $response['body']['errors']);
     }
 
-    /** @param array<string, string> $query @return array{status: int, body: array} */
+    /**
+     * @param array<string, string> $query
+     * @return array{status: int, body: array<array-key, mixed>}
+     */
     private function dispatch(string $path, array $query): array
     {
         $_SERVER['REQUEST_METHOD'] = 'GET';
@@ -110,6 +114,6 @@ class WeatherEndpointIntegrationTest extends DatabaseIntegrationTestCase
         $body = json_decode($output === false ? '' : $output, true);
         self::assertIsArray($body, 'The endpoint should return a JSON object.');
 
-        return ['status' => http_response_code(), 'body' => $body];
+        return ['status' => (int) http_response_code(), 'body' => $body];
     }
 }

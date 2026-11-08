@@ -6,6 +6,7 @@ namespace ADS\TakeHome\Repositories;
 
 use ADS\TakeHome\Framework\Database\DatabaseConnectionInterface;
 use DateTimeInterface;
+use UnexpectedValueException;
 
 class WeatherRepository implements WeatherRepositoryInterface
 {
@@ -22,7 +23,12 @@ class WeatherRepository implements WeatherRepositoryInterface
 
         $cities = [];
         foreach ($rows as $row) {
-            $cities[$row['id']] = $row['name'];
+            $id = $row['id'] ?? null;
+            $name = $row['name'] ?? null;
+            if ((!is_int($id) && !is_string($id)) || !is_string($name)) {
+                throw new UnexpectedValueException('Az adatbázisból érkező városadat érvénytelen.');
+            }
+            $cities[(int) $id] = $name;
         }
         return $cities;
     }
@@ -34,7 +40,11 @@ class WeatherRepository implements WeatherRepositoryInterface
 
         $regions = [];
         foreach ($rows as $row) {
-            $regions[$row['region']] = $row['region'];
+            $region = $row['region'] ?? null;
+            if (!is_string($region)) {
+                throw new UnexpectedValueException('Az adatbázisból érkező régióadat érvénytelen.');
+            }
+            $regions[$region] = $region;
         }
         return $regions;
     }
@@ -64,7 +74,7 @@ class WeatherRepository implements WeatherRepositoryInterface
             ],
         );
 
-        return $rows;
+        return $this->normalizeWeatherRows($rows);
     }
 
     /**
@@ -99,7 +109,27 @@ class WeatherRepository implements WeatherRepositoryInterface
             ],
         );
 
-        return $rows;
+        return $this->normalizeWeatherRows($rows);
+    }
+
+    /**
+     * PDO can return booleans for scalar columns; normalize them to integers
+     * so repository rows match the weather data contract.
+     *
+     * @param list<array<string, scalar|null>> $rows
+     * @return list<array<string, int|float|string|null>>
+     */
+    private function normalizeWeatherRows(array $rows): array
+    {
+        return array_map(static function (array $row): array {
+            /** @var array<string, int|float|string|null> $normalizedRow */
+            $normalizedRow = [];
+            foreach ($row as $key => $value) {
+                $normalizedRow[$key] = is_bool($value) ? (int) $value : $value;
+            }
+
+            return $normalizedRow;
+        }, $rows);
     }
 
 }

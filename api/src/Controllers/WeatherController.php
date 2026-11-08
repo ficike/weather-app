@@ -12,7 +12,7 @@ use ADS\TakeHome\RequestValidation\RegionWeatherRequestValidator;
 use ADS\TakeHome\Services\Weather\WeatherService;
 use ADS\TakeHome\Services\Weather\WeatherSettings;
 
-class WeatherController extends Controller
+class WeatherController
 {
     public function __construct(
         private readonly WeatherService $weatherService,
@@ -40,15 +40,15 @@ class WeatherController extends Controller
 
     public function getCityWeather(HttpRequest $request): HttpResponseInterface
     {
-        $validated = $this->validateRequest($request, new CityWeatherRequestValidator());
-        $weather = $this->weatherService->findCityWeather(...$validated);
+        $query = (new CityWeatherRequestValidator())->validateWeatherQuery($request->query);
+        $weather = $this->weatherService->findCityWeather($query->cityId, $query->startDate, $query->endDate);
         return new JsonHttpResponse($weather);
     }
 
     public function getRegionWeather(HttpRequest $request): HttpResponseInterface
     {
-        $validated = $this->validateRequest($request, new RegionWeatherRequestValidator());
-        $weather = $this->weatherService->findRegionWeather(...$validated);
+        $query = (new RegionWeatherRequestValidator())->validateWeatherQuery($request->query);
+        $weather = $this->weatherService->findRegionWeather($query->region, $query->startDate, $query->endDate);
         return new JsonHttpResponse($weather);
     }
 }
