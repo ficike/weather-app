@@ -7,12 +7,14 @@ require_once __DIR__ . "/helpers.php";
 
 use ADS\TakeHome\Controllers\ExampleController;
 use ADS\TakeHome\Controllers\WeatherController;
+use ADS\TakeHome\Framework\Cache\FileCache;
 use ADS\TakeHome\Framework\Config\Config;
 use ADS\TakeHome\Framework\Database\MySQL;
 use ADS\TakeHome\Framework\Http\HttpExceptionResponseFactory;
 use ADS\TakeHome\Framework\Http\HttpKernel;
 use ADS\TakeHome\Framework\Http\HttpResponseEmitter;
 use ADS\TakeHome\Framework\Http\Router;
+use ADS\TakeHome\Repositories\CachingWeatherRepository;
 use ADS\TakeHome\Repositories\WeatherRepository;
 use ADS\TakeHome\Services\Weather\WeatherReportFactory;
 use ADS\TakeHome\Services\Weather\WeatherService;
@@ -39,7 +41,10 @@ $mysql = new MySQL(
 );
 $exampleController = new ExampleController(greeting: 'Hello', db: $mysql);
 $weatherService = new WeatherService(
-    new WeatherRepository($mysql),
+    new CachingWeatherRepository(
+        new WeatherRepository($mysql),
+        new FileCache(dirname(__DIR__) . '/storage/cache'),
+    ),
     new WeatherReportFactory(new WeatherStatisticsCalculator()),
 );
 $weatherController = new WeatherController(

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace ADS\TakeHome\RequestValidation;
 
-use ADS\TakeHome\RequestValidation\Core\RequestValidator;
 use ADS\TakeHome\RequestValidation\Core\RequestValidationException;
+use ADS\TakeHome\RequestValidation\Core\RequestValidator;
 use DateTimeImmutable;
 
 /** Base validator for weather requests with a shared date range. */

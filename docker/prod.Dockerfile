@@ -16,6 +16,10 @@ RUN apk add --no-cache \
 COPY api/    /var/www/html/api
 COPY client/ /tmp/client
 
+RUN mkdir -p /var/www/html/api/storage/cache \
+    && chown -R nobody:nobody /var/www/html/api/storage \
+    && chmod 0770 /var/www/html/api/storage/cache
+
 WORKDIR /var/www/html/api
 RUN <<SH
 XDEBUG_MODE=off composer install

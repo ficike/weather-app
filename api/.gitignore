@@ -2,3 +2,5 @@ vendor/
 .php-cs-fixer.cache
 .phpunit.cache
 .phpactor.json
+storage/cache/*
+!storage/cache/.gitkeep
