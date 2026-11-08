@@ -5,9 +5,14 @@ declare(strict_types=1);
 namespace ADS\TakeHome\Tests;
 
 use ADS\TakeHome\Controllers\WeatherController;
-use ADS\TakeHome\Framework\Config;
-use ADS\TakeHome\Framework\Router;
+use ADS\TakeHome\Framework\Http\HttpKernel;
+use ADS\TakeHome\Framework\Http\HttpResponseEmitter;
+use ADS\TakeHome\Framework\Http\Router;
 use ADS\TakeHome\Repositories\WeatherRepository;
+use ADS\TakeHome\Services\Weather\WeatherReportFactory;
+use ADS\TakeHome\Services\Weather\WeatherStatisticsCalculator;
+use ADS\TakeHome\Services\Weather\WeatherService;
+use ADS\TakeHome\Services\Weather\WeatherSettings;
 use PHPUnit\Framework\Attributes\Test;
 
 class WeatherEndpointIntegrationTest extends DatabaseIntegrationTestCase
@@ -17,7 +22,6 @@ class WeatherEndpointIntegrationTest extends DatabaseIntegrationTestCase
     protected function setUp(): void
     {
         parent::setUp();
-        Config::load(__DIR__ . '/../config');
         $this->seedWeatherData();
         $this->previousStatus = http_response_code();
     }
@@ -88,13 +92,16 @@ class WeatherEndpointIntegrationTest extends DatabaseIntegrationTestCase
         $_GET = $query;
 
         $router = new Router();
-        $controller = new WeatherController(new WeatherRepository($this->db));
+        $controller = new WeatherController(new WeatherService(
+            new WeatherRepository($this->db),
+            new WeatherReportFactory(new WeatherStatisticsCalculator()),
+        ), new WeatherSettings([], 1));
         $router->addRoute('GET', '/city-weather', $controller->getCityWeather(...));
         $router->addRoute('GET', '/region-weather', $controller->getRegionWeather(...));
 
         ob_start();
         try {
-            $router->handleRequest();
+            (new HttpKernel($router, new HttpResponseEmitter()))->handleRequest();
             $output = ob_get_contents();
         } finally {
             ob_end_clean();

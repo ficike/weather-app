@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace ADS\TakeHome\Tests;
 
-use ADS\TakeHome\Framework\MySQL;
+use ADS\TakeHome\Framework\Config\Config;
+use ADS\TakeHome\Framework\Database\MySQL;
 use PDO;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
@@ -16,11 +17,12 @@ abstract class DatabaseIntegrationTestCase extends TestCase
 
     protected function setUp(): void
     {
-        $host = config('database.mysql.host');
-        $schema = config('database.mysql.schema') . '_test';
-        $username = config('database.mysql.username');
-        $password = config('database.mysql.password');
-        $port = config('database.mysql.port');
+        $database = Config::load(__DIR__ . '/../config')->get('database.mysql');
+        $host = $database['host'];
+        $schema = $database['schema'] . '_test';
+        $username = $database['username'];
+        $password = $database['password'];
+        $port = $database['port'];
 
         if (preg_match('/^weather_test[a-zA-Z0-9_]*$/', $schema) !== 1) {
             throw new RuntimeException('Az integrációs tesztek csak weather_test kezdetű adatbázissémát használhatnak.');

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace ADS\TakeHome\Framework;
+namespace ADS\TakeHome\Framework\Http;
 
 /**
  * HTTP válasz.
@@ -20,4 +20,7 @@ interface HttpResponseInterface
      * HTTP válasz tartalma.
      */
     public function getBody(): string|null;
+
+    /** @return array<string, string> HTTP headers to send with the response. */
+    public function getHeaders(): array;
 }

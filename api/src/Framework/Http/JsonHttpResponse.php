@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace ADS\TakeHome\Framework;
+namespace ADS\TakeHome\Framework\Http;
 
 /**
  * HTTP válasz, JSON törzzsel.
@@ -33,5 +33,11 @@ class JsonHttpResponse implements HttpResponseInterface
             return "json_encode() hiba: {$errmsg} ({$errno})";
         }
         return $json;
+    }
+
+    /** @return array<string, string> */
+    public function getHeaders(): array
+    {
+        return ['Content-Type' => 'application/json; charset=utf-8'];
     }
 }

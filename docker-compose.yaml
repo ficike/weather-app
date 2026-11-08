@@ -7,6 +7,7 @@ services:
       context: ./docker
     environment:
       XDEBUG_MODE: ${XDEBUG_MODE:-off}
+      APP_DEBUG: "true"
     volumes:
       - ./api:/var/www/html
     extra_hosts:
@@ -49,6 +50,7 @@ services:
       context: .
     environment:
       XDEBUG_MODE: ${XDEBUG_MODE:-off}
+      APP_DEBUG: "false"
     extra_hosts:
       - host.docker.internal:host-gateway
     networks:

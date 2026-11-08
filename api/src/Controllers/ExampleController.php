@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace ADS\TakeHome\Controllers;
 
-use ADS\TakeHome\Framework\HttpRequest;
-use ADS\TakeHome\Framework\HttpResponseInterface;
-use ADS\TakeHome\Framework\JsonHttpResponse;
-use ADS\TakeHome\Framework\MySQL;
+use ADS\TakeHome\Framework\Database\MySQL;
+use ADS\TakeHome\Framework\Http\HttpRequest;
+use ADS\TakeHome\Framework\Http\HttpResponseInterface;
+use ADS\TakeHome\Framework\Http\JsonHttpResponse;
 
 /**
  * Egy minta controller osztály, a keretrendszer funkcióinak bemutatásához.

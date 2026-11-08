@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace ADS\TakeHome\Framework;
+namespace ADS\TakeHome\Framework\Database;
 
 use PDO;
 use PDOException;
@@ -10,7 +10,7 @@ use PDOException;
 /**
  * MySQL adatbáziskapcsolat.
  */
-class MySQL
+class MySQL implements DatabaseConnectionInterface
 {
     private readonly PDO $conn;
 

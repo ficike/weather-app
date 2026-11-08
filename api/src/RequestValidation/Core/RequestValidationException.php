@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace ADS\TakeHome\RequestValidation;
+namespace ADS\TakeHome\RequestValidation\Core;
 
 use RuntimeException;
 

@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace ADS\TakeHome\Tests;
 
-use ADS\TakeHome\Framework\Config;
 use ADS\TakeHome\Repositories\WeatherRepository;
+use ADS\TakeHome\Services\Weather\WeatherReportFactory;
+use ADS\TakeHome\Services\Weather\WeatherStatisticsCalculator;
+use ADS\TakeHome\Services\Weather\WeatherService;
 use DateTimeImmutable;
 use PHPUnit\Framework\Attributes\Test;
 
@@ -14,7 +16,6 @@ class WeatherRepositoryIntegrationTest extends DatabaseIntegrationTestCase
     protected function setUp(): void
     {
         parent::setUp();
-        Config::load(__DIR__ . '/../config');
         $this->seedWeatherData();
     }
 
@@ -38,7 +39,7 @@ class WeatherRepositoryIntegrationTest extends DatabaseIntegrationTestCase
     {
         $repository = new WeatherRepository($this->db);
 
-        $result = $repository->findByCityAndDateRange(
+        $result = (new WeatherService($repository, new WeatherReportFactory(new WeatherStatisticsCalculator())))->findCityWeather(
             987654321,
             new DateTimeImmutable('2024-01-01'),
             new DateTimeImmutable('2024-01-02'),
@@ -58,7 +59,7 @@ class WeatherRepositoryIntegrationTest extends DatabaseIntegrationTestCase
     {
         $repository = new WeatherRepository($this->db);
 
-        $result = $repository->findByRegionAndDateRange(
+        $result = (new WeatherService($repository, new WeatherReportFactory(new WeatherStatisticsCalculator())))->findRegionWeather(
             'Dunántúl',
             new DateTimeImmutable('2024-01-01'),
             new DateTimeImmutable('2024-01-02'),

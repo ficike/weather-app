@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace ADS\TakeHome\Framework;
+namespace ADS\TakeHome\Framework\Config;
 
 use InvalidArgumentException;
 use RuntimeException;
@@ -46,6 +46,16 @@ final class Config
                 return $default;
             }
             $value = $value[$segment];
+        }
+
+        return $value;
+    }
+
+    public function require(string $key): mixed
+    {
+        $value = $this->get($key);
+        if ($value === null) {
+            throw new InvalidArgumentException("A(z) {$key} konfigurációs érték kötelező.");
         }
 
         return $value;

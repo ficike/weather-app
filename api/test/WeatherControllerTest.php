@@ -5,43 +5,38 @@ declare(strict_types=1);
 namespace ADS\TakeHome\Tests;
 
 use ADS\TakeHome\Controllers\WeatherController;
-use ADS\TakeHome\Framework\Config;
-use ADS\TakeHome\Framework\HttpRequest;
-use ADS\TakeHome\Framework\JsonHttpResponse;
-use ADS\TakeHome\Repositories\WeatherRepository;
-use ADS\TakeHome\RequestValidation\RequestValidationException;
+use ADS\TakeHome\Framework\Http\HttpRequest;
+use ADS\TakeHome\Framework\Http\JsonHttpResponse;
+use ADS\TakeHome\Services\Weather\WeatherService;
+use ADS\TakeHome\Services\Weather\WeatherSettings;
+use ADS\TakeHome\RequestValidation\Core\RequestValidationException;
 use DateTimeImmutable;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 class WeatherControllerTest extends TestCase
 {
-    protected function setUp(): void
-    {
-        Config::load(__DIR__ . '/../config');
-    }
-
     #[Test]
     public function weatherConfigReturnsUnitsAndDecimalPlaces(): void
     {
-        $controller = new WeatherController($this->createMock(WeatherRepository::class));
+        $controller = $this->controller($this->createMock(WeatherService::class));
 
         $response = $controller->getWeatherConfig(new HttpRequest([]));
 
         self::assertInstanceOf(JsonHttpResponse::class, $response);
         self::assertSame(200, $response->getStatus());
         self::assertSame([
-            'units' => config('weather.units'),
-            'decimals' => config('weather.decimal_places'),
+            'units' => ['si' => ['label' => 'SI', 'temperature' => '°C', 'precipitation' => 'mm']],
+            'decimals' => 1,
         ], json_decode($response->getBody(), true));
     }
 
     #[Test]
     public function citiesEndpointReturnsRepositoryCities(): void
     {
-        $repository = $this->createMock(WeatherRepository::class);
-        $repository->expects(self::once())->method('findCities')->willReturn([1 => 'Budapest (Közép-Magyarország)']);
-        $controller = new WeatherController($repository);
+        $service = $this->createMock(WeatherService::class);
+        $service->expects(self::once())->method('findCities')->willReturn([1 => 'Budapest (Közép-Magyarország)']);
+        $controller = $this->controller($service);
 
         $response = $controller->getCities(new HttpRequest([]));
 
@@ -52,9 +47,9 @@ class WeatherControllerTest extends TestCase
     #[Test]
     public function regionsEndpointReturnsRepositoryRegions(): void
     {
-        $repository = $this->createMock(WeatherRepository::class);
-        $repository->expects(self::once())->method('findRegions')->willReturn(['Közép-Magyarország' => 'Közép-Magyarország']);
-        $controller = new WeatherController($repository);
+        $service = $this->createMock(WeatherService::class);
+        $service->expects(self::once())->method('findRegions')->willReturn(['Közép-Magyarország' => 'Közép-Magyarország']);
+        $controller = $this->controller($service);
 
         $response = $controller->getRegions(new HttpRequest([]));
 
@@ -66,12 +61,12 @@ class WeatherControllerTest extends TestCase
     public function cityWeatherPassesValidatedParametersToRepository(): void
     {
         $weather = ['header' => ['date' => 'Dátum'], 'data' => [], 'statistics' => []];
-        $repository = $this->createMock(WeatherRepository::class);
-        $repository->expects(self::once())
-            ->method('findByCityAndDateRange')
+        $service = $this->createMock(WeatherService::class);
+        $service->expects(self::once())
+            ->method('findCityWeather')
             ->with(1, new DateTimeImmutable('2024-01-01'), new DateTimeImmutable('2024-01-02'))
             ->willReturn($weather);
-        $controller = new WeatherController($repository);
+        $controller = $this->controller($service);
 
         $response = $controller->getCityWeather(new HttpRequest([
             'cityId' => '1', 'startDate' => '20240101', 'endDate' => '20240102',
@@ -84,9 +79,9 @@ class WeatherControllerTest extends TestCase
     #[Test]
     public function cityWeatherRejectsInvalidRequest(): void
     {
-        $repository = $this->createMock(WeatherRepository::class);
-        $repository->expects(self::never())->method('findByCityAndDateRange');
-        $controller = new WeatherController($repository);
+        $service = $this->createMock(WeatherService::class);
+        $service->expects(self::never())->method('findCityWeather');
+        $controller = $this->controller($service);
 
         try {
             $controller->getCityWeather(new HttpRequest(['cityId' => '0', 'startDate' => '20240102', 'endDate' => '20240101']));
@@ -101,12 +96,12 @@ class WeatherControllerTest extends TestCase
     public function regionWeatherPassesValidatedParametersToRepository(): void
     {
         $weather = ['header' => ['date' => 'Dátum'], 'data' => [], 'statistics' => []];
-        $repository = $this->createMock(WeatherRepository::class);
-        $repository->expects(self::once())
-            ->method('findByRegionAndDateRange')
+        $service = $this->createMock(WeatherService::class);
+        $service->expects(self::once())
+            ->method('findRegionWeather')
             ->with('Közép-Magyarország', new DateTimeImmutable('2024-01-01'), new DateTimeImmutable('2024-01-02'))
             ->willReturn($weather);
-        $controller = new WeatherController($repository);
+        $controller = $this->controller($service);
 
         $response = $controller->getRegionWeather(new HttpRequest([
             'region' => 'Közép-Magyarország', 'startDate' => '20240101', 'endDate' => '20240102',
@@ -119,9 +114,9 @@ class WeatherControllerTest extends TestCase
     #[Test]
     public function regionWeatherRejectsMissingRegion(): void
     {
-        $repository = $this->createMock(WeatherRepository::class);
-        $repository->expects(self::never())->method('findByRegionAndDateRange');
-        $controller = new WeatherController($repository);
+        $service = $this->createMock(WeatherService::class);
+        $service->expects(self::never())->method('findRegionWeather');
+        $controller = $this->controller($service);
 
         try {
             $controller->getRegionWeather(new HttpRequest(['startDate' => '20240101', 'endDate' => '20240102']));
@@ -129,5 +124,13 @@ class WeatherControllerTest extends TestCase
         } catch (RequestValidationException $exception) {
             self::assertArrayHasKey('region', $exception->errors);
         }
+    }
+
+    private function controller(WeatherService $service): WeatherController
+    {
+        return new WeatherController($service, new WeatherSettings(
+            ['si' => ['label' => 'SI', 'temperature' => '°C', 'precipitation' => 'mm']],
+            1,
+        ));
     }
 }

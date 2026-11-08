@@ -4,13 +4,12 @@ declare(strict_types=1);
 
 namespace ADS\TakeHome\Repositories;
 
-use ADS\TakeHome\Framework\MySQL;
-use ADS\TakeHome\DTO\WeatherData;
+use ADS\TakeHome\Framework\Database\DatabaseConnectionInterface;
 use DateTimeInterface;
 
-class WeatherRepository
+class WeatherRepository implements WeatherRepositoryInterface
 {
-    public function __construct(private MySQL $db) {}
+    public function __construct(private DatabaseConnectionInterface $db) {}
 
     /** @return array<int, string> City IDs mapped to city names. */
     public function findCities(): array
@@ -39,13 +38,9 @@ class WeatherRepository
     }
 
     /**
-     * @return array{
-     *   header: array<string, string>,
-     *   data: list<WeatherData>,
-     *   statistics: array<string, array{median: float|null, mode: list<float>}>
-     * }
+     * @return list<array<string, int|float|string|null>>
      */
-    public function findByCityAndDateRange(
+    public function findCityWeatherRows(
         int $cityId,
         DateTimeInterface $startDate,
         DateTimeInterface $endDate,
@@ -68,29 +63,16 @@ class WeatherRepository
             ],
         );
 
-        return [
-            'header' => [
-                'date' => 'Dátum',
-                'min_temp' => 'Minimum hőmérséklet',
-                'max_temp' => 'Maximum hőmérséklet',
-                'precipitation' => 'Csapadék',
-            ],
-            'data' => $this->formatWeatherData($rows),
-            'statistics' => $this->summarizeWeatherData($rows),
-        ];
+        return $rows;
     }
 
     /**
      * @param string $region
      * @param DateTimeInterface $startDate
      * @param DateTimeInterface $endDate
-     * @return array{
-     *   header: array<string, string>,
-     *   data: list<WeatherData>,
-     *   statistics: array<string, array{median: float|null, mode: list<float>}>
-     * }
+     * @return list<array<string, int|float|string|null>>
      */
-    public function findByRegionAndDateRange(
+    public function findRegionWeatherRows(
         string $region,
         DateTimeInterface $startDate,
         DateTimeInterface $endDate,
@@ -117,74 +99,7 @@ class WeatherRepository
             ],
         );
 
-        return [
-            'header' => [
-                'date' => 'Dátum',
-                'min_temp' => 'Átlag minimum hőmérséklet',
-                'max_temp' => 'Átlag maximum hőmérséklet',
-                'precipitation' => 'Átlag csapadék',
-            ],
-            'data' => $this->formatWeatherData($rows),
-            'statistics' => $this->summarizeWeatherData($rows),
-        ];
-    }
-
-    /**
-     * @param list<array<string, int|float|string|null>> $rows
-     * @return list<WeatherData>
-     */
-    public function formatWeatherData(array $rows): array
-    {
-        $weather = [];
-        foreach ($rows as $row) {
-            $weather[] = new WeatherData($row);
-        }
-        return $weather;
-    }
-
-    /**
-     * @param list<array<string, int|float|string|null>> $rows
-     * @return array<string, array{median: float|null, mode: list<float>}>
-     */
-    private function summarizeWeatherData(array $rows): array
-    {
-        $summary = [];
-        foreach (['min_temp', 'max_temp'] as $column) {
-            $values = array_values(array_filter(
-                array_map(static fn (array $row): ?float => $row[$column] === null ? null : (float)$row[$column], $rows),
-                static fn (?float $value): bool => $value !== null,
-            ));
-            sort($values, SORT_NUMERIC);
-
-            if ($values === []) {
-                $summary[$column] = ['median' => null, 'mode' => []];
-                continue;
-            }
-
-            $count = count($values);
-            $middle = intdiv($count, 2);
-            $median = $count % 2 === 1
-                ? $values[$middle]
-                : ($values[$middle - 1] + $values[$middle]) / 2;
-
-            $frequencies = array_count_values(array_map(static fn (float $value): string => (string)$value, $values));
-            $maxFrequency = max($frequencies);
-            $modes = [];
-            if ($maxFrequency > 1) {
-                foreach ($frequencies as $value => $frequency) {
-                    if ($frequency === $maxFrequency) {
-                        $modes[] = (float)$value;
-                    }
-                }
-            }
-
-            $summary[$column] = [
-                'median' => $median,
-                'mode' => $modes,
-            ];
-        }
-
-        return $summary;
+        return $rows;
     }
 
 }

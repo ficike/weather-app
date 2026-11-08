@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace ADS\TakeHome\Framework;
+namespace ADS\TakeHome\Framework\Http;
 
 /**
  * HTTP kérés. 
@@ -16,7 +16,8 @@ class HttpRequest
      */
     public function __construct(
         public readonly array $query,
-        // a többit most hagyjuk
+        public readonly string $method = 'GET',
+        public readonly string $path = '/',
     ) {
     }
 
@@ -27,6 +28,14 @@ class HttpRequest
     {
         return new HttpRequest(
             query: $_GET,
+            method: $_SERVER['REQUEST_METHOD'] ?? 'GET',
+            path: self::requestPath($_SERVER['REQUEST_URI'] ?? '/'),
         );
+    }
+
+    private static function requestPath(string $requestUri): string
+    {
+        $path = parse_url($requestUri, PHP_URL_PATH);
+        return rawurldecode(is_string($path) ? $path : '/');
     }
 }
